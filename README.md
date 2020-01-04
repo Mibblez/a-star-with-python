@@ -4,8 +4,6 @@ An implementation of the A* path finding written in Python with [Pygame](https:/
 
 ### Requirements
 
-For video exports:
-
 * Python3.7
 * Pygame
 
