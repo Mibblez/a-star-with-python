@@ -108,17 +108,21 @@ class Tile(object):
                 Tile.nav_start.set_type(TileType.FLOOR, game)     # Set old nav_start tile to floor
 
             Tile.nav_start = self
-            self.__sprite = NavPointSprite(game, self.x_grid, self.y_grid)
+            self.__sprite = NavStartSprite(game, self.x_grid, self.y_grid)
             self.walkable = True
         elif new_tile_type == TileType.NAV_END:
             if Tile.nav_end is not None:
                 Tile.nav_end.set_type(TileType.FLOOR, game)       # Set old nav_end tile to floor
 
             Tile.nav_end = self
-            self.__sprite = NavPointSprite(game, self.x_grid, self.y_grid)
+            self.__sprite = NavEndSprite(game, self.x_grid, self.y_grid)
             self.walkable = True
         elif new_tile_type == TileType.NAV_PATH:
             self.__sprite = NavPathSprite(game, self.x_grid, self.y_grid)
+        elif new_tile_type == TileType.NAV_OPEN_SET:
+            self.__sprite = OpenSetSprite(game, self.x_grid, self.y_grid)
+        elif new_tile_type == TileType.NAV_CLOSED_SET:
+            self.__sprite = ClosedSetSprite(game, self.x_grid, self.y_grid)
 
         self.__tile_type = new_tile_type
 
@@ -171,7 +175,6 @@ class Game:
         self.done_pathfinding = False
 
     def draw_grid(self):
-        self.screen.fill(BLACK)
         for x in range(0, self.SCREEN_WIDTH, self.TILE_SIZE):
             pygame.draw.line(self.screen, GREY, (x, 0), (x, self.SCREEN_HEIGHT))
         for y in range(0, self.SCREEN_HEIGHT, self.TILE_SIZE):
@@ -225,7 +228,6 @@ class Game:
                     self.grid[mouse_pos_x_grid][mouse_pos_y_grid].set_type(TileType.WALL, self)
 
     def pathfind(self):
-        # TODO: handle case where no valid path exists
         self.can_modify_grid = False
         self.currently_pathfinding = True
 
@@ -251,7 +253,7 @@ class Game:
             closed_set.append(current_tile)
 
             if current_tile is destination_tile:    # Found destination
-                self.show_sets(open_set, closed_set)    # TODO: highlight sets with green for open and red for closed
+                self.show_sets(open_set, closed_set)
                 self.find_path(start_tile, destination_tile)
                 self.done_pathfinding = True
                 self.currently_pathfinding = False
@@ -272,6 +274,13 @@ class Game:
                     if neighbor_tile not in open_set:
                         open_set.append(neighbor_tile)
 
+        if self.currently_pathfinding:
+            # Could not find a valid path
+            self.show_sets(open_set, closed_set)
+            self.currently_pathfinding = False
+            self.done_pathfinding = True
+            print("No valid path exists.")
+
     def find_path(self, start_tile, destination_tile):
         path: List[Tile] = []
         current_tile = destination_tile
@@ -287,8 +296,13 @@ class Game:
                 tile.set_type(TileType.NAV_PATH, self)
 
     def show_sets(self, open_set, closed_set):
-        # TODO: highlight sets with green for open and red for closed
-        pass
+        for closed_tile in closed_set:
+            # Do not change the type of the start or end tiles
+            if closed_tile is Tile.nav_start or closed_tile is Tile.nav_end:
+                continue
+            closed_tile.set_type(TileType.NAV_CLOSED_SET, self)
+        for open_tile in open_set:
+            open_tile.set_type(TileType.NAV_OPEN_SET, self)
 
     # Game Loop
     def run(self):
@@ -297,8 +311,9 @@ class Game:
         while self.running:
             self.handle_input()
 
-            self.draw_grid()
+            self.screen.fill(BLACK)
             self.all_sprites.draw(self.screen)
+            self.draw_grid()
 
             pygame.display.update()
 
