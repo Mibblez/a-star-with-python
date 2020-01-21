@@ -1,6 +1,6 @@
 # A* With Python
 
-An implementation of the A* path finding written in Python with [Pygame](https://www.pygame.org/news) used for visualization.
+An implementation of the A* path finding algorithm written in Python with [Pygame](https://www.pygame.org/news) used for visualization.
 
 ### Requirements
 
