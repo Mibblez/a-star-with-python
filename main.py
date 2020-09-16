@@ -61,7 +61,7 @@ class Tile(object):
 
     @property
     def f_cost(self):
-        return self.g_cost + self. h_cost
+        return self.g_cost + self.h_cost
 
     def get_pos(self) -> (int, int):
         return self.x_grid, self.y_grid
